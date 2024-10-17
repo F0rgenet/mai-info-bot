@@ -1,9 +1,4 @@
-import asyncio
-
-from bs4 import BeautifulSoup
-
 from parser.utils import groups_request
-from loguru import logger
 
 
 async def get_all_departments() -> list[str]:
@@ -30,6 +25,14 @@ async def get_all_courses() -> list[int]:
     return courses
 
 
+async def get_one_group() -> str:
+    departments = await get_all_departments()
+    department = departments[0]
+    soup = await groups_request(department=department, course="all")
+    group = soup.findChild("a", {"class": "btn-group"})
+    return group.text
+
+
 async def parse_groups() -> dict[str: list[str]]:
     departments = await get_all_departments()
 
@@ -39,4 +42,4 @@ async def parse_groups() -> dict[str: list[str]]:
         group_elements = soup.findChildren("a", {"class": "btn-group"})
         department_groups = [element.text for element in group_elements]
         groups[department] = department_groups
-    logger.debug(groups)
+    return groups

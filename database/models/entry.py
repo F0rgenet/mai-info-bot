@@ -8,6 +8,7 @@ class Entry(Database.BASE):
     __tablename__ = 'entries'
     entry_id = Column(Integer, primary_key=True)
     datetime = Column(DateTime, nullable=False)
+    week = Column(Integer, nullable=False)
 
     subject_id = Column(Integer, ForeignKey("subjects.subject_id"), nullable=False)
     subject = relationship("Subject", back_populates="entries", lazy="selectin")

@@ -12,7 +12,7 @@ async def __request(url: str, **kwargs) -> BeautifulSoup:
         headers = {'user-agent': UserAgent().chrome}
         response = await session.get(link, headers=headers)
         if response.status_code != 200:
-            raise ConnectionError(f"Невозможно установить подключение с {url}")
+            raise ConnectionError(f"Невозможно установить соединение с {link} [{response.status_code}]")
     soup = BeautifulSoup(response.text, "html.parser")
     return soup
 
