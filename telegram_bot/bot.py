@@ -12,24 +12,26 @@ from aiogram_dialog.api.exceptions import UnknownIntent
 from loguru import logger
 
 from config import BASE_DIR, TELEGRAM_BOT_TOKEN
+from telegram_bot.dialogs import states
 from handlers import routers
 from dialogs import dialogs
-from telegram_bot.dialogs import states
+from database import register_models, dispose_database
 
 
 def include_routers(dispatcher: Dispatcher):
     dispatcher.include_routers(*routers)
     dispatcher.include_routers(*dialogs)
 
+
 async def on_startup(dispatcher: Dispatcher):
     logger.info("Запуск бота...")
-    # TODO: Начать соединение с базой данных
+    await register_models()
     logger.success("Бот запущен")
 
 
 async def on_shutdown(dispatcher: Dispatcher):
     logger.info("Остановка бота...")
-    # TODO: Прекратить соединение с базой данных
+    await dispose_database()
     logger.success("Бот остановлен")
 
 
@@ -62,6 +64,7 @@ async def main():
         await dispatcher.start_polling(bot, skip_updates=True)
     finally:
         await bot.session.close()
+
 
 async def on_unknown_intent(event: ErrorEvent, dialog_manager: DialogManager):
     # Example of handling UnknownIntent Error and starting new dialog.
