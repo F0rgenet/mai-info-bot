@@ -17,6 +17,9 @@ class Schedule(StatesGroup):
 class Export(StatesGroup):
     MAIN = State()
 
+class Settings(StatesGroup):
+    MAIN = State()
+
 class Feedback(StatesGroup):
     MAIN = State()
 
