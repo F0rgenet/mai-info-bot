@@ -14,7 +14,7 @@ from loguru import logger
 from config import BASE_DIR, TELEGRAM_BOT_TOKEN
 from handlers import routers
 from dialogs import dialogs
-from src.dialogs import states
+from telegram_bot.dialogs import states
 
 
 def include_routers(dispatcher: Dispatcher):
@@ -51,7 +51,7 @@ def setup_dispatcher() -> Dispatcher:
 
 
 async def main():
-    logger.add(BASE_DIR / "logs" / "bot.log", rotation="100MB", compression="zip")
+    logger.add(BASE_DIR / "logs" / "telegram_bot" / "bot.log", rotation="100MB", compression="zip")
 
     bot_token = TELEGRAM_BOT_TOKEN
     bot: Bot = Bot(token=bot_token, default=DefaultBotProperties(parse_mode='HTML'))

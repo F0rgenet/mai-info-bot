@@ -4,6 +4,7 @@ from .settings import dialog as settings_dialog
 from .export import dialog as export_dialog
 from .group_choice import dialog as group_choice_dialog
 from .schedule import dialog as schedule_dialog
+
 dialogs = [
     main_dialog,
     guide_dialog,

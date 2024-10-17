@@ -4,7 +4,7 @@ from aiogram_dialog.widgets.kbd import Button, Start, Row, Back
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
-from src.dialogs import states
+from telegram_bot.dialogs import states
 
 
 async def get_user_name(dialog_manager: DialogManager, **kwargs):

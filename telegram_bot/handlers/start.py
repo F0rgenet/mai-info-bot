@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 from aiogram_dialog import DialogManager, StartMode, ShowMode
 
-from src.dialogs.states import Main
+from telegram_bot.dialogs.states import Main
 
 
 router = Router()
