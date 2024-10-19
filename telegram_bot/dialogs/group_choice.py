@@ -4,7 +4,6 @@ from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button, ListGroup
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
-from magic_filter import MagicFilter
 
 from telegram_bot.dialogs import states
 from telegram_bot.dialogs.states import Schedule

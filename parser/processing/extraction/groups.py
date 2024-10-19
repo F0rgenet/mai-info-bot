@@ -1,54 +1,62 @@
-from typing import Dict, AsyncGenerator, Tuple
-
+from typing import AsyncGenerator, List, Tuple
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from parser.utils import groups_request
 
-
-async def get_all_departments(departments_soup: BeautifulSoup) -> list[str]:
-    logger.info("Получение институтов...")
+async def extract_departments(departments_soup: BeautifulSoup) -> AsyncGenerator[Tuple[str, BeautifulSoup], None]:
+    logger.info("Начинаю получение институтов...")
     elements = departments_soup.find("select", {"id": "department"})
-    departments = []
-    for element in elements.find_all("option")[1:]:
+
+    if elements is None:
+        logger.warning("Не удалось найти элемент select с id 'department'")
+        return
+
+    options = elements.find_all("option")[1:]
+
+    valid_departments_count = 0
+    for element in options:
         department: str = element["value"].replace("\n", "").strip()
         if "выберите" in department.lower():
             continue
-        departments.append(department)
-    logger.success("Институты получены")
-    return departments
+
+        logger.debug(f"Найден институт: {department}")
+        yield department, element
+        valid_departments_count += 1
+
+    logger.success(f"Институты получены: {valid_departments_count}")
 
 
-async def get_all_courses(courses_soup: BeautifulSoup) -> list[int]:
+async def extract_courses(courses_soup: BeautifulSoup) -> AsyncGenerator[int, None]:
+    logger.info("Начинаю получение курсов...")
     elements = courses_soup.find("select", id="course")
-    courses = []
-    for element in elements.find_all("option")[2:]:
+
+    if elements is None:
+        logger.warning("Не удалось найти элемент select с id 'course'")
+        return
+
+    options = elements.find_all("option")[2:]
+
+    valid_course_count = 0
+    for element in options:
         course = element["value"].replace("\n", "").strip()
         if "выберите" in course.lower() or "все курсы" in course.lower():
             continue
-        courses.append(int(course))
-    return courses
+
+        logger.debug(f"Найден курс: {course}")
+        yield int(course)
+        valid_course_count += 1
+
+    logger.success(f"Курсы получены: {valid_course_count}")
 
 
-async def get_one_group() -> str:
-    departments = await get_all_departments()
-    department = departments[0]
-    soup = await groups_request(department=department, course="all")
-    group = soup.find("a", class_="btn-group")
-    return group.text
+async def extract_department_groups(department_soup: BeautifulSoup) -> List[str]:
+    logger.info("Начинаю получение групп для института..")
+    group_elements = department_soup.find_all("a", class_="btn-group")
+    department_groups = [element.text.strip() for element in group_elements]
 
+    if not department_groups:
+        logger.warning("Группы института не найдены")
+    else:
+        logger.info(f"Найдено {len(department_groups)} групп(ы) института: {', '.join(department_groups)}")
 
-async def parse_groups() -> AsyncGenerator[Tuple[str, list[str]], None]:
-    logger.info("Запуск получения групп...")
-    departments = await get_all_departments()
-
-    for department in departments:
-        logger.info(f"Получение групп: {department}")
-        try:
-            soup = await groups_request(department=department, course="all")
-            group_elements = soup.find_all("a", class_="btn-group")
-            department_groups = [element.text for element in group_elements]
-            logger.success(f"Получены группы: {department}")
-            yield department, department_groups
-        except Exception as exception:
-            logger.error(f"Ошибка при получении групп для {department}: {exception}")
+    return department_groups

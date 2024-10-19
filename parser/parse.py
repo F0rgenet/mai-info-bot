@@ -8,7 +8,6 @@ from parser.processing.extraction import parse_groups, get_all_weeks
 from parser.database import init_db, get_session, get_session_generator
 from parser.database.crud import crud_week, crud_group
 from parser.schemas import WeekCreate, GroupCreate
-from parser.utils import get_schedule_url
 
 
 async def parse_groups_to_database():
