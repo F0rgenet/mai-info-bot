@@ -15,7 +15,7 @@ from config import BASE_DIR, TELEGRAM_BOT_TOKEN
 from telegram_bot.dialogs import states
 from handlers import routers
 from dialogs import dialogs
-from database import register_models, dispose_database
+from parser.database import register_models, dispose_database
 
 
 def include_routers(dispatcher: Dispatcher):

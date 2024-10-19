@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <common>
+
+    </common>
+
+    <telegram_bot>
+        <token>${BOT_TOKEN}</token>
+        <admin_chat_id>123456789</admin_chat_id>
+        <allowed_users>user1,user2,user3</allowed_users>
+    </telegram_bot>
+
+    <parser>
+        <source>
+            <schedule_url>https://mai.ru/education/studies/schedule/index.php</schedule_url>
+            <groups_url>https://mai.ru/education/studies/schedule/groups.php</groups_url>
+        </source>
+        <database>
+            <url>database/schedule.db</url>
+            <pool_size>5</pool_size>
+            <max_overflow>10</max_overflow>
+        </database>
+        <parsing>
+            <interval>3600</interval>
+            <retry_attempts>3</retry_attempts>
+            <retry_delay>300</retry_delay>
+            <chunk_size>20</chunk_size>
+            <chunk_delay>1</chunk_delay>
+            <concurrent_requests>15</concurrent_requests>
+        </parsing>
+    </parser>
+
+    <web_app>
+        <host>0.0.0.0</host>
+        <port>8000</port>
+        <secret_key>${SECRET_KEY}</secret_key>
+        <allowed_origins>http://localhost:3000</allowed_origins>
+    </web_app>
+
+    <mini_app>
+        <api_url>https://api.example.com</api_url>
+        <version>1.0.0</version>
+    </mini_app>
+</config>
