@@ -1,5 +1,5 @@
 from aiogram.types import Message
-from aiogram_dialog import Dialog, Window, DialogManager
+from aiogram_dialog import Dialog, Window, DialogManager, ShowMode
 from aiogram_dialog.widgets.kbd import Button, Start, Row, Back
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
@@ -10,13 +10,12 @@ from telegram_bot.dialogs import states
 async def get_user_name(dialog_manager: DialogManager, **kwargs):
     username = "гость"
     event = dialog_manager.event
-    logger.debug(event.__class__.__name__)
+
     if isinstance(event, Message) and event.from_user.first_name:
         username = dialog_manager.event.from_user.first_name
     return {
         "username": username
     }
-
 
 
 dialog = Dialog(
@@ -32,7 +31,8 @@ dialog = Dialog(
             Start(
                 Const("👥 Группа"),
                 id="group_choice_button",
-                state=states.GroupChoice.MAIN
+                state=states.GroupChoice.MAIN,
+                show_mode=ShowMode.DELETE_AND_SEND
             ),
             Start(
                 Const("❔ Помощь"),

@@ -15,7 +15,7 @@ from config import BASE_DIR, TELEGRAM_BOT_TOKEN
 from telegram_bot.dialogs import states
 from handlers import routers
 from dialogs import dialogs
-from parser.database import register_models, dispose_database
+from telegram_bot.middlewares import FastAPIMiddleware
 
 
 def include_routers(dispatcher: Dispatcher):
@@ -24,14 +24,10 @@ def include_routers(dispatcher: Dispatcher):
 
 
 async def on_startup(dispatcher: Dispatcher):
-    logger.info("Запуск бота...")
-    await register_models()
     logger.success("Бот запущен")
 
 
 async def on_shutdown(dispatcher: Dispatcher):
-    logger.info("Остановка бота...")
-    await dispose_database()
     logger.success("Бот остановлен")
 
 
@@ -41,6 +37,12 @@ def setup_dispatcher() -> Dispatcher:
     dispatcher = Dispatcher(storage=storage)
     dispatcher.startup.register(on_startup)
     dispatcher.shutdown.register(on_shutdown)
+
+    # TODO: Получать url из конфига
+    api_middleware = FastAPIMiddleware(api_base_url='http://127.0.0.1:8000')
+    dispatcher.message.middleware(api_middleware)
+    dispatcher.callback_query.middleware(api_middleware)
+
     include_routers(dispatcher)
     setup_dialogs(dispatcher)
 
