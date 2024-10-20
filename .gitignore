@@ -22,4 +22,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/parser/database/schedule.db
+/backend/database/schedule.db

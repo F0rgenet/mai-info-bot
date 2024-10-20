@@ -4,8 +4,8 @@ from rapidfuzz.distance import Levenshtein
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from parser.database.crud.base import CRUDWithName
-from parser.database.models import Group, Week, Teacher, Classroom
+from backend.database.crud.base import CRUDWithName
+from backend.database.models import Group, Week, Teacher, Classroom
 
 
 class CRUDGroup(CRUDWithName[Group]):

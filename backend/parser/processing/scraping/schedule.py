@@ -1,7 +1,7 @@
 from typing import List
 
-from parser.database import get_session_generator
-from parser.database.crud import crud_group, crud_week
+from backend.database import get_session_generator
+from backend.database.crud import crud_group, crud_week
 from .base import Scraper, UrlWithContext
 
 

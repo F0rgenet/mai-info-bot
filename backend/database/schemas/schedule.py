@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from parser.schemas.base import NamedEntityBase, NamedEntityUpdate, NamedEntity
+from backend.database.schemas.base import NamedEntityBase, NamedEntityUpdate, NamedEntity
 
 
 class SubjectBase(NamedEntityBase):

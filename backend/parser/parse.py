@@ -3,11 +3,11 @@ from datetime import datetime
 
 from loguru import logger
 
-from parser.processing.extraction import parse_groups, get_all_weeks
+from backend.parser.processing.extraction import parse_groups, get_all_weeks
 
-from parser.database import init_db, get_session, get_session_generator
-from parser.database.crud import crud_week, crud_group
-from parser.schemas import WeekCreate, GroupCreate
+from backend.database import init_db, get_session, get_session_generator
+from backend.database.crud import crud_week, crud_group
+from backend.database.schemas import WeekCreate, GroupCreate
 
 
 async def parse_groups_to_database():

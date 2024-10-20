@@ -2,8 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from loguru import logger
 
-from parser.database import init_db, shutdown_db
-from parser.api import groups_router
+from backend.database import init_db, shutdown_db
+from backend.api import groups_router
 
 
 def include_routers(fastapi_app: FastAPI):

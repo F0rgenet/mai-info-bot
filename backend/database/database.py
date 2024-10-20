@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.exc import SQLAlchemyError
 
-from parser.config import parser_config
+from backend.parser.config import parser_config
 
 Base = declarative_base()
 

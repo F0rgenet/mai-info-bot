@@ -4,7 +4,7 @@ from sqlalchemy import delete, inspect, UniqueConstraint, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from parser.database.utils import handle_db_exceptions
+from backend.database.utils import handle_db_exceptions
 
 
 T = TypeVar('T')

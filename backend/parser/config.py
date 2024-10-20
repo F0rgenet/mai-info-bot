@@ -16,17 +16,12 @@ class ParserConfig:
 
     @property
     def database_url(self):
-        file_path = self.config.get('parser', 'database', 'url')
-        base_dir = str(self.base_dir).replace('\\', '/')
-        return f'sqlite+aiosqlite:///{base_dir}/{file_path}'
-
-    @property
-    def database_pool_size(self):
-        return self.config.get_int('parser', 'database', 'pool_size')
-
-    @property
-    def database_max_overflow(self):
-        return self.config.get_int('parser', 'database', 'max_overflow')
+        db_username = self.config.get('parser', 'database', 'username')
+        db_password = self.config.get('parser', 'database', 'password')
+        db_host = self.config.get('parser', 'database', 'host')
+        db_port = self.config.get('parser', 'database', 'port')
+        db_name = self.config.get('parser', 'database', 'name')
+        return f'postgresql+asyncpg://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}'
 
     @property
     def parsing_interval(self):

@@ -1,5 +1,5 @@
 from .base import CRUDBase
-from parser.database.models import Entry, Subject, Type
+from backend.database.models import Entry, Subject, Type
 
 
 class CRUDEntry(CRUDBase):

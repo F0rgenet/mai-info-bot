@@ -1,7 +1,7 @@
 from aiohttp import ClientSession
 from loguru import logger
 
-from parser.processing.scraping.base import groups_request
+from backend.parser.processing.scraping.base import groups_request
 
 
 async def scrape_groups_page(department: str):

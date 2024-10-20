@@ -10,7 +10,7 @@ from fake_useragent import UserAgent
 from loguru import logger
 from pydantic import BaseModel
 from tenacity import retry, stop_after_attempt, wait_exponential, wait_fixed
-from parser.config import parser_config
+from backend.parser.config import parser_config
 
 
 class UrlWithContext(BaseModel):

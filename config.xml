@@ -5,7 +5,7 @@
     </common>
 
     <telegram_bot>
-        <token>${BOT_TOKEN}</token>
+        <token>${TELEGRAM_BOT_TOKEN}</token>
         <admin_chat_id>123456789</admin_chat_id>
         <allowed_users>user1,user2,user3</allowed_users>
     </telegram_bot>
@@ -16,9 +16,11 @@
             <groups_url>https://mai.ru/education/studies/schedule/groups.php</groups_url>
         </source>
         <database>
-            <url>database/schedule.db</url>
-            <pool_size>5</pool_size>
-            <max_overflow>10</max_overflow>
+            <username>${DATABASE_USERNAME}</username>
+            <password>${DATABASE_PASSWORD}</password>
+            <host>${DATABASE_HOST}</host>
+            <port>5432</port>
+            <name>schedule</name>
         </database>
         <parsing>
             <interval>3600</interval>

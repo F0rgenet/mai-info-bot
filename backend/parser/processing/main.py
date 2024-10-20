@@ -2,12 +2,12 @@ import asyncio
 
 from loguru import logger
 
-from parser.config import parser_config
-from parser.database import get_session_generator, init_db
-from parser.database.crud import crud_group
-from parser.processing.extraction import extract_department_groups, extract_departments
-from parser.processing.scraping import scrape_departments_page, scrape_groups_page
-from parser.schemas import GroupCreate
+from backend.parser.config import parser_config
+from backend.database import get_session_generator, init_db
+from backend.database.crud import crud_group
+from backend.parser.processing.extraction import extract_department_groups, extract_departments
+from backend.parser.processing.scraping import scrape_departments_page, scrape_groups_page
+from backend.database.schemas import GroupCreate
 
 concurrent_requests = parser_config.concurrent_requests
 
