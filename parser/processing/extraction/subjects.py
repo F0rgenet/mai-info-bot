@@ -5,9 +5,6 @@ from typing import Dict, Tuple, AsyncGenerator
 
 from bs4 import PageElement, Tag, BeautifulSoup
 
-from parser.processing.extraction.groups import get_one_group
-from parser.utils import schedule_request
-
 locale.setlocale(locale.LC_TIME, 'rus')
 
 

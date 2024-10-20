@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from parser.database.crud.base import CRUDWithName
 from parser.database.models import Group, Week, Teacher, Classroom
-from parser.schemas import ClassroomCreate
 
 
 class CRUDGroup(CRUDWithName[Group]):
@@ -27,11 +26,7 @@ class CRUDTeacher(CRUDWithName[Teacher]):
 
 
 class CRUDClassroom(CRUDWithName[Classroom]):
-    async def create(self, session: AsyncSession, data: ClassroomCreate) -> Classroom:
-        existing_classroom = await self.get_by_name(session, data.name)
-        if existing_classroom:
-            raise ValueError(f"Кабинет '{data.name}' уже существует")
-        return await super().create(session, data)
+    pass
 
 
 crud_group = CRUDGroup(Group)

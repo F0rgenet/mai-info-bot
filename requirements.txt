@@ -14,3 +14,4 @@ aiohttp~=3.10.10
 Scrapy~=2.11.2
 itemadapter~=0.9.0
 RapidFuzz~=3.10.0
+accessify~=0.3.1

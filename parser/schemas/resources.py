@@ -7,7 +7,7 @@ from .base import NamedEntityBase, NamedEntityUpdate, NamedEntity
 
 
 class GroupBase(NamedEntityBase):
-    pass
+    department: str
 
 
 class GroupCreate(GroupBase):

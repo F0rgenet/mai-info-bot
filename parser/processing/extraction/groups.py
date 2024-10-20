@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 
-async def extract_departments(departments_soup: BeautifulSoup) -> AsyncGenerator[Tuple[str, BeautifulSoup], None]:
+async def extract_departments(departments_soup: BeautifulSoup) -> AsyncGenerator[Tuple[str], None]:
     logger.info("Начинаю получение институтов...")
     elements = departments_soup.find("select", {"id": "department"})
 
@@ -20,7 +20,7 @@ async def extract_departments(departments_soup: BeautifulSoup) -> AsyncGenerator
             continue
 
         logger.debug(f"Найден институт: {department}")
-        yield department, element
+        yield department
         valid_departments_count += 1
 
     logger.success(f"Институты получены: {valid_departments_count}")
@@ -49,14 +49,14 @@ async def extract_courses(courses_soup: BeautifulSoup) -> AsyncGenerator[int, No
     logger.success(f"Курсы получены: {valid_course_count}")
 
 
-async def extract_department_groups(department_soup: BeautifulSoup) -> List[str]:
+async def extract_department_groups(groups_soup: BeautifulSoup) -> List[str]:
     logger.info("Начинаю получение групп для института..")
-    group_elements = department_soup.find_all("a", class_="btn-group")
+    group_elements = groups_soup.find_all("a", class_="btn-group")
     department_groups = [element.text.strip() for element in group_elements]
 
     if not department_groups:
         logger.warning("Группы института не найдены")
     else:
-        logger.info(f"Найдено {len(department_groups)} групп(ы) института: {', '.join(department_groups)}")
+        logger.info(f"Найдено {len(department_groups)} групп(ы) института")
 
     return department_groups

@@ -1,9 +1,8 @@
-from aiogram import BaseMiddleware
-from aiogram.types import Message
-import aiohttp
 from typing import Callable, Dict, Any
 
-from loguru import logger
+import aiohttp
+from aiogram import BaseMiddleware
+from aiogram.types import Message
 
 
 class FastAPIMiddleware(BaseMiddleware):

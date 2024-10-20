@@ -18,6 +18,8 @@ class UrlWithContext(BaseModel):
     context: dict
 
 
+# TODO: Переписать всё используя этот объект
+
 class Scraper(ABC):
     def __init__(self):
         self.config = parser_config
@@ -35,8 +37,8 @@ class Scraper(ABC):
     @abstractmethod
     async def get_urls(self) -> List[UrlWithContext]:
         """
-        Must return a list of tuples (url, context),
-        where context is any additional information for the URL.
+        Должен вернуть список кортежей (url, контекст),
+        где контекст — это любая дополнительная информация для URL-адреса.
         """
         pass
 
@@ -56,15 +58,15 @@ class Scraper(ABC):
 
     async def scrape_url(self, url: str, context: Dict) -> Tuple[str, Dict, Union[BeautifulSoup, None]]:
         """
-        Scrapes the URL and returns a tuple (url, context, result).
-        If an error occurs, result will be None.
+        Очищает URL-адрес и возвращает кортеж (url, контекст, результат).
+        В случае возникновения ошибки результатом будет None.
         """
         try:
             html = await self.fetch_html(url)
             parsed_html = await self.parse_html(html)
             return url, context, parsed_html
         except Exception as e:
-            logger.error(f"Error scraping URL {url}: {str(e)}")
+            logger.error(f"Ошибка обработки URL {url}: {str(e)}")
             return url, context, None
 
     async def scrape(self):
@@ -83,9 +85,9 @@ class Scraper(ABC):
             await asyncio.sleep(self.config.chunk_delay)
 
 
+@retry(stop=stop_after_attempt(parser_config.retry_attempts), wait=wait_fixed(parser_config.retry_delay))
 async def request(url: str, session: ClientSession, **kwargs) -> BeautifulSoup:
     full_url = build_full_url(url, **kwargs)
-
     try:
         async with session.get(
                 full_url,
@@ -95,9 +97,8 @@ async def request(url: str, session: ClientSession, **kwargs) -> BeautifulSoup:
             response.raise_for_status()
             text = await response.text()
     except aiohttp.ClientError as exc:
-        logger.error(f"Error during request {full_url}: {exc}")
-        raise ConnectionError(f"Error during request {full_url}: {exc}")
-
+        logger.error(f"Ошибка выполнения запроса {full_url}: {exc}")
+        raise ConnectionError(f"Ошибка выполнения запроса {full_url}: {exc}")
     return BeautifulSoup(text, "html.parser")
 
 
