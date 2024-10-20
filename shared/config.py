@@ -2,6 +2,8 @@ import xml.etree.ElementTree as ETree
 from pathlib import Path
 import os
 
+from loguru import logger
+
 
 class Config:
     def __init__(self):
@@ -9,25 +11,25 @@ class Config:
         tree = ETree.parse(self.base_dir / 'config.xml')
         self.root = tree.getroot()
 
-    def get(self, *keys, default=None):
-        try:
-            element = self.root
-            for key in keys:
-                element = element.find(key)
-                if element is None:
-                    return default
-
-            value = element.text
-            if value is None or value.strip() == '':
+    def get(self, *keys, default=None, can_be_defaulted: bool = None):
+        element = self.root
+        for key in keys:
+            element = element.find(key)
+            if element is None:
+                if not can_be_defaulted:
+                    logger.error(f"Отсутствует запись в конфиге: {'.'.join(keys)}")
+                    raise AttributeError()
                 return default
-
-            if value.startswith('${') and value.endswith('}'):
-                env_var = value[2:-1]
-                return os.getenv(env_var, default)
-
-            return value
-        except AttributeError:
+        value = element.text
+        if value is None or value.strip() == '':
             return default
+        if value.startswith('${') and value.endswith('}'):
+            env_var = os.getenv(value[2:-1], default)
+            if not env_var:
+                logger.error(f"Отсутствует переменная окружения: {value[2:-1]}")
+                raise AttributeError()
+            return env_var
+        return value
 
     def get_bool(self, section, key, default=False) -> bool:
         value = self.get(section, key, default)
