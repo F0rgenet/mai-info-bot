@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from loguru import logger
 from pydantic import BaseModel
-from tenacity import retry, stop_after_attempt, wait_exponential, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed
 from backend.parser.config import parser_config
 
 
@@ -18,13 +18,13 @@ class UrlWithContext(BaseModel):
     context: dict
 
 
-# TODO: Переписать всё используя этот объект
-
 class Scraper(ABC):
     def __init__(self):
         self.config = parser_config
-        self.session: ClientSession
+        self.session: ClientSession = None
         self.semaphore = asyncio.Semaphore(self.config.concurrent_requests)
+        self.url_queue = asyncio.Queue()
+        self.result_queue = asyncio.Queue()
 
     async def __aenter__(self):
         self.session = ClientSession()
@@ -34,21 +34,13 @@ class Scraper(ABC):
         if self.session:
             await self.session.close()
 
-    @abstractmethod
-    async def get_urls(self) -> List[UrlWithContext]:
-        """
-        Должен вернуть список кортежей (url, контекст),
-        где контекст — это любая дополнительная информация для URL-адреса.
-        """
-        pass
-
-    @retry(
-        stop=stop_after_attempt(parser_config.retry_attempts),
-        wait=wait_exponential(multiplier=1, min=parser_config.retry_delay, max=60)
-    )
+    @retry(stop=stop_after_attempt(parser_config.retry_attempts), wait=wait_fixed(parser_config.retry_delay))
     async def fetch_html(self, url: str) -> str:
         async with self.semaphore:
-            async with self.session.get(url) as response:
+            async with self.session.get(
+                url, headers={"User-Agent": UserAgent().chrome},
+                cookies={"schedule-group-cache": "2.0"}
+            ) as response:
                 response.raise_for_status()
                 return await response.text()
 
@@ -56,59 +48,57 @@ class Scraper(ABC):
     async def parse_html(html: str) -> BeautifulSoup:
         return BeautifulSoup(html, 'html.parser')
 
-    async def scrape_url(self, url: str, context: Dict) -> Tuple[str, Dict, Union[BeautifulSoup, None]]:
+    async def scrape_worker(self):
         """
-        Очищает URL-адрес и возвращает кортеж (url, контекст, результат).
-        В случае возникновения ошибки результатом будет None.
+        Обработчик для URL-очереди. Берёт URL из очереди, обрабатывает его и помещает результат в result_queue.
         """
-        try:
-            html = await self.fetch_html(url)
-            parsed_html = await self.parse_html(html)
-            return url, context, parsed_html
-        except Exception as e:
-            logger.error(f"Ошибка обработки URL {url}: {str(e)}")
-            return url, context, None
+        while True:
+            url, context = await self.url_queue.get()  # Получение задачи из очереди
+            if url is None:  # Завершающий сигнал для завершения обработчиков
+                break
+
+            try:
+                html = await self.fetch_html(url)
+                parsed_html = await self.parse_html(html)
+                await self.result_queue.put((url, context, parsed_html))
+            except Exception as e:
+                logger.error(f"Ошибка обработки URL {url}: {str(e)}")
+                await self.result_queue.put((url, context, None))
+            finally:
+                self.url_queue.task_done()  # Уведомление о завершении задачи
+
+    async def add_urls(self, urls: List[UrlWithContext]):
+        """
+        Добавляет URL-адреса в очередь для последующей обработки.
+        """
+        for url_with_context in urls:
+            await self.url_queue.put((url_with_context.url, url_with_context.context))
 
     async def scrape(self):
-        urls_with_contexts = await self.get_urls()
-        chunk_size = self.config.chunk_size
+        """
+        Основной метод запуска обработки. Запускает обработчики очереди URL и возвращает результаты из result_queue.
+        """
+        workers = [asyncio.create_task(self.scrape_worker()) for _ in range(self.config.concurrent_requests)]
 
-        for i in range(0, len(urls_with_contexts), chunk_size):
-            chunk = urls_with_contexts[i:i + chunk_size]
-            tasks = [self.scrape_url(url, context) for url, context in chunk]
-            results = await asyncio.gather(*tasks)
+        await self.url_queue.join()
 
-            for url, context, result in results:
-                if result:
-                    yield url, context, result
+        for _ in workers:
+            await self.url_queue.put((None, None))
 
-            await asyncio.sleep(self.config.chunk_delay)
+        await asyncio.gather(*workers)
 
+        while not self.result_queue.empty():
+            yield await self.result_queue.get()
 
-@retry(stop=stop_after_attempt(parser_config.retry_attempts), wait=wait_fixed(parser_config.retry_delay))
-async def request(url: str, session: ClientSession, **kwargs) -> BeautifulSoup:
-    full_url = build_full_url(url, **kwargs)
-    try:
-        async with session.get(
-                full_url,
-                headers={"User-Agent": UserAgent().chrome},
-                cookies={"schedule-group-cache": "2.0"}
-        ) as response:
-            response.raise_for_status()
-            text = await response.text()
-    except aiohttp.ClientError as exc:
-        logger.error(f"Ошибка выполнения запроса {full_url}: {exc}")
-        raise ConnectionError(f"Ошибка выполнения запроса {full_url}: {exc}")
-    return BeautifulSoup(text, "html.parser")
+    @staticmethod
+    async def build_url_with_params(url: str, **kwargs) -> str:
+        return f"{url}{'?' if kwargs else ''}{urllib.parse.urlencode(kwargs)}"
 
 
-def build_full_url(url: str, **kwargs) -> str:
-    return f"{url}{'?' if kwargs else ''}{urllib.parse.urlencode(kwargs)}"
+async def build_groups_url(**kwargs) -> str:
+    return await Scraper.build_url_with_params(parser_config.groups_url, **kwargs)
 
 
-async def groups_request(session: ClientSession, **kwargs) -> BeautifulSoup:
-    return await request(parser_config.groups_url, session, **kwargs)
+async def build_schedule_url(**kwargs) -> str:
+    return await Scraper.build_url_with_params(parser_config.schedule_url, **kwargs)
 
-
-async def schedule_request(session: ClientSession, **kwargs) -> BeautifulSoup:
-    return await request(parser_config.schedule_url, session, **kwargs)
