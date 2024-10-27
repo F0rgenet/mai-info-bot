@@ -6,13 +6,13 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.exc import SQLAlchemyError
 
-from backend.parser.config import parser_config
+from config import backend_config
 
 Base = declarative_base()
 
 
 engine = create_async_engine(
-    parser_config.database_url,
+    backend_config.database_url,
     echo=False,
     pool_pre_ping=True,
 )
@@ -29,7 +29,7 @@ async def init_db():
         logger.info("Модели базы данных успешно созданы.")
     except SQLAlchemyError as e:
         logger.error(f"Ошибка инициализации базы данных: {e}")
-        raise  # Пробрасываем исключение, чтобы оно могло быть обработано выше
+        raise
 
 
 async def shutdown_db():
@@ -60,7 +60,7 @@ async def get_session_generator() -> AsyncGenerator[AsyncSession, None]:
         yield session
     except SQLAlchemyError as e:
         logger.error(f"Ошибка работы с сессией: {e}")
-        await session.rollback()  # Откат изменений при ошибке
+        await session.rollback()
         raise
     finally:
         await session.close()

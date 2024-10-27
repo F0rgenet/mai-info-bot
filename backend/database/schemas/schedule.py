@@ -1,13 +1,13 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
 
 from pydantic import BaseModel
 
-from backend.database.schemas.base import NamedEntityBase, NamedEntityUpdate, NamedEntity
+from .base import NamedEntityBase, NamedEntityUpdate, NamedEntity
 
 
 class SubjectBase(NamedEntityBase):
-    abbreviation_id: int
+    abbreviation_id: Optional[int] = None
 
 
 class Subject(SubjectBase, NamedEntity):
@@ -63,12 +63,14 @@ class TypeUpdate(BaseModel):
 
 
 class EntryBase(BaseModel):
-    datetime: datetime
+    start_datetime: datetime
+    end_datetime: datetime
     subject_id: int
     type_id: int
     classroom_id: int
-    teacher_id: int
+    teacher_id: Optional[int] = None
     group_id: int
+    week_id: int
 
 
 class Entry(EntryBase):
@@ -89,3 +91,73 @@ class EntryUpdate(BaseModel):
     classroom_id: Optional[int] = None
     teacher_id: Optional[int] = None
     group_id: Optional[int] = None
+
+
+class GroupBase(NamedEntityBase):
+    department: str
+
+
+class GroupCreate(GroupBase):
+    pass
+
+
+class GroupUpdate(NamedEntityUpdate):
+    pass
+
+
+class Group(GroupBase, NamedEntity):
+    pass
+
+
+class WeekBase(BaseModel):
+    number: int
+    start_date: date
+    end_date: date
+
+
+class WeekCreate(WeekBase):
+    pass
+
+
+class WeekUpdate(BaseModel):
+    number: Optional[int] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+
+class Week(WeekBase):
+    class Config:
+        from_attributes = True
+
+
+class TeacherBase(BaseModel):
+    full_name: str
+
+
+class TeacherCreate(TeacherBase):
+    pass
+
+
+class TeacherUpdate(BaseModel):
+    full_name: Optional[str] = None
+
+
+class Teacher(TeacherBase):
+    class Config:
+        from_attributes = True
+
+
+class ClassroomBase(NamedEntityBase):
+    pass
+
+
+class ClassroomCreate(ClassroomBase):
+    pass
+
+
+class ClassroomUpdate(NamedEntityUpdate):
+    pass
+
+
+class Classroom(ClassroomBase):
+    pass

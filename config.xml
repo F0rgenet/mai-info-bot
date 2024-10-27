@@ -14,6 +14,7 @@
         <source>
             <schedule_url>https://mai.ru/education/studies/schedule/index.php</schedule_url>
             <groups_url>https://mai.ru/education/studies/schedule/groups.php</groups_url>
+            <api_url>https://public.mai.ru/schedule/data</api_url>
         </source>
         <database>
             <username>${DATABASE_USERNAME}</username>

@@ -4,7 +4,7 @@ from sqlalchemy import delete, inspect, UniqueConstraint, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from backend.database.utils import handle_db_exceptions
+from database.utils import handle_db_exceptions
 
 
 T = TypeVar('T')
@@ -46,6 +46,8 @@ class CRUDBase(Generic[T]):
 
     async def get_object_by_unique_fields(self, session: AsyncSession, data: Any) -> Union[T, None]:
         unique_fields = self.get_unique_fields()
+        if not unique_fields:
+            return None
         filters = [getattr(self.model, field) == getattr(data, field) for field in unique_fields]
         query = select(self.model).filter(*filters)
         return (await session.execute(query)).scalar_one_or_none()
@@ -69,6 +71,13 @@ class CRUDBase(Generic[T]):
         return await self.create(session, data)
 
     @handle_db_exceptions
+    async def create_if_not_exists(self, session: AsyncSession, data: Any) -> Union[T, None]:
+        existing_object = await self.get_object_by_unique_fields(session, data)
+        if existing_object:
+            return existing_object
+        return await self.create(session, data)
+
+    @handle_db_exceptions
     async def get(self, session: AsyncSession, object_id: int) -> Union[T, None]:
         query = select(self.model).filter(self.model.id == object_id)
         result = await session.execute(query)
@@ -76,7 +85,7 @@ class CRUDBase(Generic[T]):
         return db_object
 
     @handle_db_exceptions
-    async def get_all(self, session: AsyncSession, skip: int = 0, limit: int = -1) -> List[T]:
+    async def get_all(self, session: AsyncSession, skip: int = 0, limit: int | None = None) -> List[T]:
         query = select(self.model).offset(skip).limit(limit)
         result = await session.execute(query)
         objects = result.scalars().all()

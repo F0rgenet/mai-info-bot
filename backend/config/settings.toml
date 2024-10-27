@@ -1,0 +1,19 @@
+[default.source]
+schedule_url = "https://mai.ru/education/studies/schedule/index.php"
+groups_url = "https://mai.ru/education/studies/schedule/groups.php"
+api_url = "https://public.mai.ru/schedule/data"
+
+[default.database]
+port = 5432
+name = "schedule"
+host = "localhost"
+username = "@format {env[DATABASE_USERNAME]}"
+password = "@format {env[DATABASE_PASSWORD]}"
+
+[default.parsing]
+interval = 3600
+retry_attempts = 3
+retry_delay = 300
+chunk_size = 20
+chunk_delay = 1.0
+concurrent_requests = 15
