@@ -1,0 +1,62 @@
+# Общие файлы Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Виртуальная среда
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Конфигурационные файлы среды
+*.env
+*.env.*
+
+# Настройки IDE и редакторов
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Логи
+*.log
+logs/
+
+# Кэш и временные файлы
+*.cache
+*.temp
+*.bak
+*.swp
+.DS_Store
+
+# Бинарные файлы C/C++
+*.so
+*.dll
+*.dylib
+
+# Библиотеки и зависимости
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+__pypackages__/
+
+# Папка для тестовых отчетов (например, pytest)
+htmlcov/
+.coverage
+coverage.xml
+.cache/
+.pytest_cache/
+.tox/
+
+# Файлы для Docker (если не используются)
+docker-compose.yml
+Dockerfile
+
+# Артефакты сборки
+*.db
+*.sqlite3
+__snapshots__/

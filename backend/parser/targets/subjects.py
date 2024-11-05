@@ -21,7 +21,7 @@ async def scrape_schedule_api_pages(target_groups: List[str]) -> (AsyncGenerator
     urls_with_context = []
     for group in target_groups:
         group_hash = hashlib.md5(group.encode()).hexdigest()
-        url = f"{backend_config.api_url}/{group_hash}.json"
+        url = f"{backend_config.source.api_url}/{group_hash}.json"
         context = {"group": group}
         urls_with_context.append((url, context))
 
@@ -32,7 +32,7 @@ async def scrape_schedule_api_pages(target_groups: List[str]) -> (AsyncGenerator
 SubjectData = namedtuple("SubjectData", ["name", "datetime_start", "datetime_end", "teacher", "type", "classroom"])
 
 
-def extract_subjects(schedule_json: dict) -> list[SubjectData]:
+def extract_subjects(schedule_json: dict) -> List[SubjectData]:
     """
     Парсинг предметов из страницы расписания.
     :param schedule_json: Объект страницы расписания.
@@ -40,8 +40,10 @@ def extract_subjects(schedule_json: dict) -> list[SubjectData]:
     """
     if not schedule_json:
         return
-    schedule_json.pop("group")
+
     subjects = []
+
+    schedule_json.pop("group")
     for schedule_date, schedule_data in schedule_json.items():
         for subject in schedule_data["pairs"].values():
             subject: dict
@@ -63,37 +65,50 @@ def extract_subjects(schedule_json: dict) -> list[SubjectData]:
 
 
 async def create_subject(subject: SubjectData, group: str):
-    async with get_session_generator() as db_session:
-        group_id = (await crud_group.get_by_name(db_session, group)).id
-        subject_data = SubjectCreate(name=subject.name)
-        subject_id = (await crud_subject.create_or_update(db_session, subject_data)).id
-        type_data = TypeCreate(short_name=subject.type if subject.type != "Экзамен" else "ЭКЗ")
-        type_id = (await crud_type.create_or_update(db_session, type_data)).id
-        classroom_data = ClassroomCreate(name=subject.classroom)
-        classroom_id = (await crud_classroom.create_or_update(db_session, classroom_data)).id
-        if subject.teacher:
-            teacher_data = TeacherCreate(full_name=subject.teacher)
-            teacher_id = (await crud_teacher.create_or_update(db_session, teacher_data)).id
-        else:
-            teacher_id = None
-        week = await crud_week.get_by_datetime(db_session, subject.datetime_start)
+    async with get_session_generator() as db_fetch_session:
+        group_id = (await crud_group.get_by_name(db_fetch_session, group)).id
+        week = await crud_week.get_by_datetime(db_fetch_session, subject.datetime_start)
         if not week:
             logger.error(f"Дата и время пары не попадает в учебные недели: {subject.datetime_start} {group}")
             return
+
+    async with get_session_generator() as db_subject_session:
+        subject_data = SubjectCreate(name=subject.name)
+        subject_id = (await crud_subject.create_or_update(db_subject_session, subject_data)).id
+
+    async with get_session_generator() as db_type_session:
+        type_data = TypeCreate(short_name=subject.type if subject.type != "Экзамен" else "ЭКЗ")
+        type_id = (await crud_type.create_or_update(db_type_session, type_data)).id
+
+    async with get_session_generator() as db_classroom_session:
+        classroom_data = ClassroomCreate(name=subject.classroom)
+        classroom_id = (await crud_classroom.create_or_update(db_classroom_session, classroom_data)).id
+
+        if subject.teacher:
+            async with get_session_generator() as db_teacher_session:
+                teacher_data = TeacherCreate(full_name=subject.teacher)
+                teacher_id = (await crud_teacher.create_or_update(db_teacher_session, teacher_data)).id
+        else:
+            teacher_id = None
+
+    async with get_session_generator() as db_entry_session:
         entry_data = EntryCreate(start_datetime=subject.datetime_start, end_datetime=subject.datetime_end,
                                  subject_id=subject_id, type_id=type_id, classroom_id=classroom_id,
                                  teacher_id=teacher_id, group_id=group_id, week_id=week.id)
-        await crud_entry.create_or_update(db_session, entry_data)
+        subject = await crud_entry.create_or_update(db_entry_session, entry_data)
+        logger.success(subject)
 
 
 async def populate_database():
+    tasks = []
     async with get_session_generator() as db_session:
         target_groups = await crud_group.get_all_names(db_session)
-        async for schedule_json, context in scrape_schedule_api_pages(target_groups):
-            if not context:
-                continue
-            logger.info(f"Получение расписания группы {context['group']}")
-            subjects = extract_subjects(schedule_json)
-            # Create and start tasks without waiting for them to finish
-            for subject in subjects:
-                await asyncio.create_task(create_subject(subject, context["group"]))
+    async for schedule_json, context in scrape_schedule_api_pages(target_groups):
+        if not context:
+            continue
+        logger.info(f"Получение расписания группы {context['group']}")
+        subjects = extract_subjects(schedule_json)
+
+        for subject in subjects:
+            await create_subject(subject, context['group'])
+

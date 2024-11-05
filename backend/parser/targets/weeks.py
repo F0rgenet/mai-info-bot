@@ -16,7 +16,7 @@ async def scrape_weeks_page(group: str) -> BeautifulSoup:
     :return: BeautifulSoup объект html страницы.
     """
     logger.info("Скрапинг страницы недель...")
-    target_url = url_with_parameters(backend_config.schedule_url, group=group)
+    target_url = url_with_parameters(backend_config.source.schedule_url, group=group)
     result = await scrape_target_url(target_url)
     return BeautifulSoup(result, features="lxml")
 

@@ -1,178 +1,76 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, ForeignKey, CheckConstraint
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from database.database import Base
+import uuid
+from datetime import datetime
+from typing import List, Optional
 
+from sqlalchemy import String, Integer, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-class Entry(Base):
-    __tablename__ = 'entries'
-
-    id = Column(Integer, primary_key=True)
-    start_datetime = Column(DateTime, nullable=False)
-    end_datetime = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="RESTRICT"), nullable=False, index=True)
-    subject = relationship("Subject", back_populates="entries")
-
-    type_id = Column(Integer, ForeignKey("types.id", ondelete="RESTRICT"), nullable=False, index=True)
-    type = relationship("Type", back_populates="entries")
-
-    classroom_id = Column(Integer, ForeignKey("classrooms.id", ondelete="SET NULL"), index=True)
-    classroom = relationship("Classroom", back_populates="entries")
-
-    teacher_id = Column(Integer, ForeignKey("teachers.id", ondelete="SET NULL"), index=True)
-    teacher = relationship("Teacher", back_populates="entries")
-
-    week_id = Column(Integer, ForeignKey("weeks.id", ondelete="RESTRICT"), nullable=False, index=True)
-    week = relationship("Week", back_populates="entries")
-
-    group_id = Column(Integer, ForeignKey("groups.id", ondelete="RESTRICT"), nullable=False, index=True)
-    group = relationship("Group", back_populates="entries")
-
-    __table_args__ = (
-        CheckConstraint('end_datetime > start_datetime', name='check_dates_order'),
-    )
-
-    def __repr__(self):
-        return f"<Entry {self.id}: {self.subject.name} {self.start_datetime}>"
-
-    def __str__(self):
-        return f"Entry {self.subject.name} at {self.start_datetime}"
-
-
-class Subject(Base):
-    __tablename__ = "subjects"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(150), unique=True, nullable=False, index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    abbreviation_id = Column(Integer, ForeignKey("abbreviations.id", ondelete="SET NULL"), index=True)
-    abbreviation = relationship("Abbreviation", back_populates="subjects")
-
-    entries = relationship("Entry", back_populates="subject", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Subject {self.id}: {self.name}>"
-
-    def __str__(self):
-        return self.name
+from database.models.base import Base
 
 
 class Abbreviation(Base):
     __tablename__ = "abbreviations"
+    name: Mapped[str] = mapped_column(String(30), nullable=False, unique=True)
+    short_name: Mapped[str] = mapped_column(String(10), nullable=False, unique=True)
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(150), nullable=False, index=True)
-    short_name = Column(String(10), nullable=False, index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    subjects = relationship("Subject", back_populates="abbreviation")
-
-    __table_args__ = (
-        CheckConstraint('length(short_name) <= length(name)', name='check_short_name_length'),
-    )
-
-    def __repr__(self):
-        return f"<Abbreviation {self.id}: {self.short_name}>"
-
-    def __str__(self):
-        return f"{self.short_name} ({self.name})"
+    subjects: Mapped[List["Subject"]] = relationship(back_populates="abbreviation")
 
 
-class Type(Base):
-    __tablename__ = 'types'
+class Subject(Base):
+    __tablename__ = "subjects"
+    name: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
+    abbreviation_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("abbreviations.id"))
 
-    id = Column(Integer, primary_key=True)
-    short_name = Column(String(5), unique=True, nullable=False, index=True)
-    full_name = Column(String(20), index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    entries = relationship("Entry", back_populates="type", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Type {self.id}: {self.short_name}>"
-
-    def __str__(self):
-        return self.full_name or self.short_name
-
-
-class Group(Base):
-    __tablename__ = 'groups'
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(15), unique=True, nullable=False, index=True)
-    department = Column(String(15), index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    entries = relationship("Entry", back_populates="group", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Group {self.id}: {self.name}>"
-
-    def __str__(self):
-        return f"{self.name} ({self.department})" if self.department else self.name
-
-
-class Week(Base):
-    __tablename__ = 'weeks'
-
-    id = Column(Integer, primary_key=True)
-    number = Column(Integer, unique=True, nullable=False, index=True)
-    start_date = Column(Date, nullable=False, index=True)
-    end_date = Column(Date, nullable=False, index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    entries = relationship("Entry", back_populates="week", cascade="all, delete-orphan")
-
-    __table_args__ = (
-        CheckConstraint('end_date > start_date', name='check_week_dates'),
-        CheckConstraint('number > 0', name='check_week_number_positive'),
-    )
-
-    def __repr__(self):
-        return f"<Week {self.id}: {self.number}>"
-
-    def __str__(self):
-        return f"Week {self.number} ({self.start_date} - {self.end_date})"
-
-
-class Teacher(Base):
-    __tablename__ = 'teachers'
-
-    id = Column(Integer, primary_key=True)
-    full_name = Column(String(50), unique=True, nullable=False, index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
-
-    entries = relationship("Entry", back_populates="teacher")
-
-    def __repr__(self):
-        return f"<Teacher {self.id}: {self.full_name}>"
-
-    def __str__(self):
-        return self.full_name
+    abbreviation: Mapped[Optional["Abbreviation"]] = relationship(back_populates="subjects")
+    entries: Mapped[List["Entry"]] = relationship(back_populates="subject")
 
 
 class Classroom(Base):
-    __tablename__ = 'classrooms'
+    __tablename__ = "classrooms"
+    name: Mapped[str] = mapped_column(String(25), nullable=False, unique=True)
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(25), nullable=False, unique=True, index=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
+    entries: Mapped[List["Entry"]] = relationship(back_populates="classroom")
 
-    entries = relationship("Entry", back_populates="classroom")
 
-    def __repr__(self):
-        return f"<Classroom {self.id}: {self.name}>"
+class Teacher(Base):
+    __tablename__ = "teachers"
+    full_name: Mapped[str] = mapped_column(String(50), unique=True)
 
-    def __str__(self):
-        return self.name
+    entries: Mapped[List["Entry"]] = relationship(back_populates="teacher")
+
+
+class Type(Base):
+    __tablename__ = "types"
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    short_name: Mapped[str] = mapped_column(String(5), nullable=False, unique=True)
+    full_name: Mapped[str] = mapped_column(String(25), nullable=False, unique=True)
+
+    entries: Mapped[List["Entry"]] = relationship(back_populates="type")
+
+
+class Group(Base):
+    __tablename__ = "groups"
+    name: Mapped[str] = mapped_column(String(15), nullable=False, unique=True)
+    department: Mapped[str] = mapped_column(String(15))
+    level: Mapped[str] = mapped_column(String(40))
+    course: Mapped[int] = mapped_column(Integer())
+
+    entries: Mapped[List["Entry"]] = relationship(back_populates="group")
+
+
+class Entry(Base):
+    __tablename__ = "entries"
+    start_datetime: Mapped[datetime] = mapped_column(DateTime(), nullable=False)
+    end_datetime: Mapped[datetime] = mapped_column(DateTime(), nullable=False)
+
+    subject_id: Mapped[uuid] = mapped_column(ForeignKey("subjects.id"), nullable=False)
+    type_id: Mapped[uuid] = mapped_column(ForeignKey("types.id"), nullable=False)
+    group_id: Mapped[Optional[uuid]] = mapped_column(ForeignKey("groups.id"))
+    classroom_id: Mapped[Optional[uuid]] = mapped_column(ForeignKey("classrooms.id"))
+    teacher_id: Mapped[Optional[uuid]] = mapped_column(ForeignKey("teachers.id"))
+
+    subject: Mapped["Subject"] = relationship(back_populates="entries")
+    group: Mapped["Group"] = relationship(back_populates="entries")
+    classroom: Mapped["Classroom"] = relationship(back_populates="entries")
+    teacher: Mapped["Teacher"] = relationship(back_populates="entries")
+    type: Mapped["Type"] = relationship(back_populates="entries")

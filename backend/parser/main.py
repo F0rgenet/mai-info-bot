@@ -6,9 +6,9 @@ from parser.targets import populate_database_weeks, populate_database_groups, po
 
 async def main():
     await init_db()
-    groups = await populate_database_groups()
+    # groups = await populate_database_groups()
     # await populate_database_weeks(groups[0])
-    # await populate_database_subjects()
+    await populate_database_subjects()
 
 
 if __name__ == "__main__":

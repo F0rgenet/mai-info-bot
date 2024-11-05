@@ -1,6 +1,6 @@
 [default.source]
 schedule_url = "https://mai.ru/education/studies/schedule/index.php"
-groups_url = "https://mai.ru/education/studies/schedule/groups.php"
+groups_url = "https://public.mai.ru/schedule/data/groups.json"
 api_url = "https://public.mai.ru/schedule/data"
 
 [default.database]

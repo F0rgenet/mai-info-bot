@@ -1,1 +1,1 @@
-from .schedule import Entry, Subject, Type, Group, Week, Teacher, Classroom
+from .schedule import Entry, Subject, Abbreviation, Group, Classroom, Teacher, Type

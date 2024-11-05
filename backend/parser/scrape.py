@@ -40,7 +40,7 @@ async def scrape_target_url(
     """
     async with semaphore:
         async with ClientSession(
-                connector=TCPConnector(ssl=False, limit=backend_config.parsing.concurrent_requests),
+                connector=TCPConnector(ssl=False, ttl_dns_cache=600, limit=backend_config.parsing.concurrent_requests),
                 headers={"User-Agent": UserAgent().chrome},
                 cookies={"schedule-group-cache": "2.0"},
                 timeout=ClientTimeout(total=backend_config.parsing.retry_delay)
