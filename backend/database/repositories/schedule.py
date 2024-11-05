@@ -6,12 +6,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models import Abbreviation, Subject, Classroom, Teacher, Type, Group, Entry
-from database.repositories.base import BaseRepository, NamedBaseRepository
+from database.repositories.base import BaseRepository, NamedBaseRepository, Model
 
 
 class AbbreviationRepository(NamedBaseRepository[Abbreviation]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, Abbreviation)
+
+    async def create(self, name: str, short_name: str) -> Abbreviation:
+        data = {"name": name, "short_name": short_name}
+        return await super().create(**data)
 
     async def get_by_short_name(self, short_name: str) -> Optional[Abbreviation]:
         query = select(self._model).where(self._model.short_name == short_name)
@@ -23,10 +27,14 @@ class SubjectRepository(NamedBaseRepository[Subject]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, Subject)
 
-    def create_or_update(self, name: str, abbreviation_id: Optional[int]) -> Subject:
+    async def create(self, name: str, abbreviation_id: Optional[int] = None) -> Subject:
+        data = {"name": name, "abbreviation_id": abbreviation_id}
+        return await super().create(**data)
+
+    async def create_or_update(self, name: str, abbreviation_id: Optional[int] = None) -> Subject:
         data = {"name": name, "abbreviation_id": abbreviation_id}
         selector = (self._model.name == name)
-        instance = super()._create_or_update_base(data, selector)
+        instance = await super().create_or_update_base(data, selector)
         return instance
 
 

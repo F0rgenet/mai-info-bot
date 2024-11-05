@@ -10,8 +10,8 @@ from database.models.base import Base
 
 class Abbreviation(Base):
     __tablename__ = "abbreviations"
-    name: Mapped[str] = mapped_column(String(30), nullable=False, unique=True)
-    short_name: Mapped[str] = mapped_column(String(10), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
+    short_name: Mapped[str] = mapped_column(String(20), nullable=False, unique=True)
 
     subjects: Mapped[List["Subject"]] = relationship(back_populates="abbreviation")
 

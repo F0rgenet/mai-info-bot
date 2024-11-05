@@ -10,6 +10,13 @@ host = "localhost"
 username = "@format {env[DATABASE_USERNAME]}"
 password = "@format {env[DATABASE_PASSWORD]}"
 
+[default.test_database]
+port = 5432
+name = "schedule_test"
+host = "localhost"
+username = "@format {env[DATABASE_USERNAME]}"
+password = "@format {env[DATABASE_PASSWORD]}"
+
 [default.parsing]
 interval = 3600
 retry_attempts = 3

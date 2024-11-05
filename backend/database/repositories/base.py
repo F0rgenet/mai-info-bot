@@ -14,20 +14,20 @@ class BaseRepository(Generic[Model]):
         self._session = session
         self._model = model
 
-    async def create(self, data: dict) -> Model:
+    async def create(self, **data: dict) -> Model:
         instance = self._model(**data)
         self._session.add(instance)
         await self._session.commit()
         await self._session.refresh(instance)
         return instance
 
-    async def _create_or_update_base(self, data: dict, *selectors: ColumnExpressionArgument[bool]) -> Model:
+    async def create_or_update_base(self, *selectors: ColumnExpressionArgument[bool], **data) -> Model:
         query = select(self._model).where(selectors)
         instance = await self._session.execute(query)
         if instance:
-            await self.update(instance, data)
+            await self.update(instance, **data)
             return instance
-        await self.create(data)
+        await self.create(**data)
 
     async def get_by_id(self, uuid: UUID) -> Optional[Model]:
         query = select(self._model).where(self._model.id == uuid)
@@ -39,7 +39,7 @@ class BaseRepository(Generic[Model]):
         result = await self._session.execute(query)
         return list(result.scalars().all())
 
-    async def update(self, uuid: UUID, data: dict) -> Optional[Model]:
+    async def update(self, uuid: UUID, **data: dict) -> Optional[Model]:
         instance = await self.get_by_id(uuid)
         if instance:
             for key, value in data.items():
@@ -57,7 +57,7 @@ class BaseRepository(Generic[Model]):
         return False
 
 
-class NamedBaseRepository(BaseRepository):
+class NamedBaseRepository(Generic[Model], BaseRepository[Model]):
     def __init__(self, session: AsyncSession, model: type[Model]):
         super().__init__(session, model)
         self._session = session
