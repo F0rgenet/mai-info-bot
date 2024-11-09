@@ -1,4 +1,4 @@
-from typing import Generic, Optional, List, TypeVar
+from typing import Generic, Optional, List, TypeVar, Dict, Any
 from uuid import UUID
 
 from loguru import logger
@@ -27,6 +27,20 @@ class BaseRepository(Generic[Model]):
         await self._session.commit()
         await self._session.refresh(instance)
         return instance
+
+    async def create_all(self, parameters: List[Dict[str, Any]]) -> List[Model]:
+        """
+        Создаёт несколько экземпляров модели по заданным параметрам.
+
+        :param parameters: Список словарей с параметрами для каждого создаваемого объекта.
+        :returns: Список созданных экземпляров модели.
+        """
+        instances = [self._model(**params) for params in parameters]
+        self._session.add_all(instances)
+        await self._session.commit()
+        for instance in instances:
+            await self._session.refresh(instance)
+        return instances
 
     async def get_by_id(self, uuid: UUID) -> Optional[Model]:
         """

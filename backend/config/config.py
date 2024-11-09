@@ -29,7 +29,6 @@ class SourceConfig(BaseModel):
     api_url: HttpUrl = Field(..., json_schema_extra={"example": "https://public.mai.ru/schedule/data"})
 
 
-
 _config = Dynaconf(
     envvar_prefix="APP",
     settings_files=[

@@ -1,6 +1,6 @@
 import pytest
 
-from database.repositories.schedule import SubjectRepository
+from database.repositories import SubjectRepository
 
 from sqlalchemy import exc
 
@@ -34,6 +34,9 @@ class TestSubjectRepository:
         assert created_subject.name == subject_name
         assert created_subject.short_name == short_name
 
+    # TODO: test_create_all
+    # TODO: test_create_all_with_short_names
+
     async def test_get_subject_by_id(self, database_session):
         subjects_repository = SubjectRepository(database_session)
         subject_name = "Программирование на языках высокого уровня"
@@ -63,11 +66,21 @@ class TestSubjectRepository:
 
         for name in subject_names:
             await subjects_repository.create(name, short_name)
-
         received_subjects = await subjects_repository.get_by_short_name(short_name)
+
         assert len(received_subjects) == len(subject_names)
         for subject in received_subjects:
             assert subject.short_name == short_name
+
+    async def test_get_all_subjects(self, database_session):
+        subjects_repository = SubjectRepository(database_session)
+        subject_names = ["Программирование на языках высокого уровня", "Программирование на языках верхнего уровня"]
+
+        for name in subject_names:
+            await subjects_repository.create(name)
+        received_subjects = await subjects_repository.get_all()
+
+        assert len(received_subjects) == len(subject_names)
 
     async def test_update_subject_name(self, database_session):
         subjects_repository = SubjectRepository(database_session)
@@ -95,3 +108,13 @@ class TestSubjectRepository:
         assert updated_subject is created_subject
         assert updated_subject.name == subject_name
         assert updated_subject.short_name is None
+
+    async def test_delete_subject(self, database_session):
+        subjects_repository = SubjectRepository(database_session)
+        subject_name = "Программирование на языках высокого уровня"
+
+        created_subject = await subjects_repository.create(subject_name)
+        await subjects_repository.delete(created_subject.id)
+        received_subject = await subjects_repository.get_by_id(created_subject.id)
+
+        assert received_subject is None
