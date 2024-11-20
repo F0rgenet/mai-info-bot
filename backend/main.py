@@ -2,19 +2,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from loguru import logger
 
-from database import init_db, shutdown_db
-from api import groups_router
+from api.schedule.routes import classroom_router
 
 
 def include_routers(fastapi_app: FastAPI):
-    fastapi_app.include_router(groups_router, prefix="/groups", tags=["groups"])
+    fastapi_app.include_router(classroom_router)
 
 
 @asynccontextmanager
 async def app_lifespan(fastapi_app: FastAPI):
     logger.info("Запуск сервера...")
     try:
-        await init_db()
+        # TODO: database health check
         logger.info("Подключение к базе данных успешно.")
         yield
     except Exception as exception:
@@ -22,7 +21,6 @@ async def app_lifespan(fastapi_app: FastAPI):
         raise
     finally:
         logger.info("Завершение работы приложения...")
-        await shutdown_db()
         logger.info("База данных отключена.")
 
 

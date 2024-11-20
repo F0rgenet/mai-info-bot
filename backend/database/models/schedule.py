@@ -13,30 +13,29 @@ class Subject(Base):
     name: Mapped[str] = mapped_column(String(150), unique=True)
     short_name: Mapped[str] = mapped_column(String(25), nullable=True)
 
-    entries: Mapped[List["Entry"]] = relationship(back_populates="subject", lazy="selectin")
+    entries: Mapped[List["Entry"]] = relationship(back_populates="subject", lazy="subquery")
 
 
 class Classroom(Base):
     __tablename__ = "classrooms"
     name: Mapped[str] = mapped_column(String(25), unique=True)
 
-    entries: Mapped[List["Entry"]] = relationship(back_populates="classroom", lazy="selectin")
+    entries: Mapped[List["Entry"]] = relationship(back_populates="classroom", lazy="subquery")
 
 
 class Teacher(Base):
     __tablename__ = "teachers"
     full_name: Mapped[str] = mapped_column(String(50), unique=True)
 
-    entries: Mapped[List["Entry"]] = relationship(back_populates="teacher", lazy="selectin")
+    entries: Mapped[List["Entry"]] = relationship(back_populates="teacher", lazy="subquery")
 
 
 class Type(Base):
     __tablename__ = "types"
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     short_name: Mapped[str] = mapped_column(String(5), unique=True)
-    full_name: Mapped[str] = mapped_column(String(25), unique=True)
+    full_name: Mapped[str] = mapped_column(String(25), unique=True, nullable=True)
 
-    entries: Mapped[List["Entry"]] = relationship(back_populates="type", lazy="selectin")
+    entries: Mapped[List["Entry"]] = relationship(back_populates="type", lazy="subquery")
 
 
 class Group(Base):
@@ -46,7 +45,7 @@ class Group(Base):
     level: Mapped[str] = mapped_column(String(40), nullable=True)
     course: Mapped[int] = mapped_column(Integer(), nullable=True)
 
-    entries: Mapped[List["Entry"]] = relationship(back_populates="group", lazy="selectin")
+    entries: Mapped[List["Entry"]] = relationship(back_populates="group", lazy="subquery")
 
 
 class Entry(Base):
@@ -60,8 +59,8 @@ class Entry(Base):
     classroom_id: Mapped[Optional[uuid]] = mapped_column(ForeignKey("classrooms.id"), nullable=True)
     teacher_id: Mapped[Optional[uuid]] = mapped_column(ForeignKey("teachers.id"), nullable=True)
 
-    subject: Mapped["Subject"] = relationship(back_populates="entries", lazy="selectin")
-    group: Mapped["Group"] = relationship(back_populates="entries", lazy="selectin")
-    classroom: Mapped["Classroom"] = relationship(back_populates="entries", lazy="selectin")
-    teacher: Mapped["Teacher"] = relationship(back_populates="entries", lazy="selectin")
-    type: Mapped["Type"] = relationship(back_populates="entries", lazy="selectin")
+    subject: Mapped["Subject"] = relationship(back_populates="entries", lazy="subquery")
+    group: Mapped["Group"] = relationship(back_populates="entries", lazy="subquery")
+    classroom: Mapped["Classroom"] = relationship(back_populates="entries", lazy="subquery")
+    teacher: Mapped["Teacher"] = relationship(back_populates="entries", lazy="subquery")
+    type: Mapped["Type"] = relationship(back_populates="entries", lazy="subquery")

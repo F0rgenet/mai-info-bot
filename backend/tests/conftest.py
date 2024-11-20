@@ -22,7 +22,7 @@ def engine():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def database_session(engine) -> AsyncGenerator[AsyncSession, None]:
+async def database_session(engine) -> AsyncSession:
     """Запустить сессию базы данных для каждого теста."""
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.drop_all)
